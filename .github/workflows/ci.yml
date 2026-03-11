@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Install uv
+      run: |
+        pip install uv
+        
+    - name: Install dependencies
+      run: |
+        uv pip install --system .
+        uv pip install --system .[dev]
+        
+    - name: Run linting
+      run: |
+        ruff check src/
+        ruff format --check src/
+        
+    - name: Run type checking
+      run: |
+        mypy src/
+        
+    - name: Run tests
+      run: |
+        pytest tests/ -v --tb=short
+        
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        architecture: 'x64'
+        
+    - name: Install uv
+      run: |
+        pip install uv
+        
+    - name: Install dependencies
+      run: |
+        uv pip install --system .
+        uv pip install --system .[build]
+        
+    - name: Verify build environment
+      run: |
+        python -c "import nuitka; print(f'Nuitka version: {nuitka.__version__}')"
+        python -c "import PySide6; print(f'PySide6 version: {PySide6.__version__}')"
+        python -c "import dxcam; print('DXcam available')"
+        
+    - name: Run Nuitka build
+      run: |
+        python src/installer/build-nuitka.py
+        
+    - name: Verify build output
+      run: |
+        $exePath = "dist/ScreenStreamer.exe"
+        if (Test-Path $exePath) {
+          $exe = Get-Item $exePath
+          Write-Host "✅ Build successful!"
+          Write-Host "Executable: $($exe.Name)"
+          Write-Host "Size: $([math]::Round($exe.Length / 1MB, 2)) MB"
+          Write-Host "Created: $($exe.LastWriteTime)"
+        } else {
+          Write-Host "❌ Build failed: Executable not found"
+          Get-ChildItem -Path "dist" -Recurse | Format-List Name, FullName
+          exit 1
+        }
+        
+    - name: Create portable package
+      run: |
+        # Ensure portable directory exists
+        if (Test-Path "dist/ScreenStreamer-Portable") {
+          Write-Host "Portable package already created by build script"
+        } else {
+          Write-Host "Creating portable package..."
+          New-Item -ItemType Directory -Path "dist/ScreenStreamer-Portable" -Force
+          Copy-Item "dist/ScreenStreamer.exe" -Destination "dist/ScreenStreamer-Portable/"
+          
+          # Create README using multi-line string
+          $readmeLines = @(
+            "# Screen Streamer - Portable Version",
+            "",
+            "## System Requirements",
+            "- Windows 10/11 64-bit (version 1890 or later)",
+            "- NVIDIA GPU with NVENC support (recommended for hardware encoding)",
+            "- 4GB RAM minimum",
+            "",
+            "## Usage",
+            "1. Run `ScreenStreamer.exe`",
+            "2. Select capture region (1/4, 1/2, or full screen)",
+            "3. Configure streaming settings (SRT/RTMP)",
+            "4. Enter stream URL and click 'Start Streaming'",
+            "",
+            "## Notes",
+            "- This is a portable version, no installation required",
+            "- FFmpeg must be installed separately for SRT/RTMP streaming",
+            "- Hardware encoding requires NVIDIA drivers with NVENC support",
+            "",
+            "## Support",
+            "For issues and feature requests, visit the project repository."
+          )
+          $readmeLines -join "`r`n" | Out-File -FilePath "dist/ScreenStreamer-Portable/README.txt" -Encoding UTF8
+        }
+        
+    - name: Create release artifacts
+      run: |
+        # Create ZIP archive
+        Compress-Archive -Path "dist/ScreenStreamer-Portable/*" -DestinationPath "ScreenStreamer-Portable-Windows.zip" -Force
+        $zip = Get-Item "ScreenStreamer-Portable-Windows.zip"
+        Write-Host "Created archive: $($zip.Name) ($([math]::Round($zip.Length / 1MB, 2)) MB)"
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: screen-streamer-windows-${{ github.sha }}
+        path: |
+          dist/ScreenStreamer.exe
+          ScreenStreamer-Portable-Windows.zip
+        if-no-files-found: error
+        retention-days: 30
+        
+    - name: Create GitHub Release (on push to main)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: dist/ScreenStreamer.exe
+        tag_name: build-${{ github.sha }}
+        name: "Build ${{ github.sha }}"
+        body: |
+          Automated build from GitHub Actions
+          
+          **Build Information:**
+          - Commit: ${{ github.sha }}
+          - Date: ${{ github.event.head_commit.timestamp }}
+          - Python: 3.11
+          - Builder: Nuitka
+          
+          **Files:**
+          - `ScreenStreamer.exe`: Standalone executable
+          - Portable package available in artifacts
+          
+          **System Requirements:**
+          - Windows 10/11 64-bit (version 1890 or later)
+          - 4GB RAM minimum
+          - NVIDIA GPU recommended for hardware encoding
+        draft: false
+        prerelease: false
