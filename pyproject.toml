@@ -1,0 +1,19 @@
+[project]
+name = "streamer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "appdirs>=1.4.4",
+    "loguru>=0.7.3",
+    "numpy>=2.4.3",
+    "opencv-python>=4.13.0.92",
+    "pydantic>=2.12.5",
+    "pyside6>=6.10.2",
+    "vidgear[core]>=0.3.4",
+]
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
