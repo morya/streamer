@@ -197,7 +197,7 @@ def main() -> None:
     # Check if Nuitka is installed
     try:
         import nuitka
-        print(f"Nuitka version: {nuitka.__version__}")
+        # print(f"Nuitka version: {nuitka.__version__}")
     except ImportError:
         print("❌ Nuitka not installed. Install with: pip install nuitka")
         sys.exit(1)
