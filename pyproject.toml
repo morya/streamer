@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 build = [
-    "nuitka>=2.0.0",
+    "nuitka[onefile]>=2.0.0",
     "pyinstaller>=6.0.0",
 ]
 dev = [

@@ -1,5 +1,11 @@
+# NOTE: This requirements.txt file is provided for compatibility only.
+# This project uses uv for dependency management with pyproject.toml.
+# For accurate dependency resolution, use:
+#   uv pip install --system .
+#   uv pip install --system .[windows,build,dev]
+
 PySide6==6.8.3
-# dxcam==0.5.0
+# dxcam==0.5.0  # Windows-only, install with: uv pip install --system .[windows]
 vidgear[core,writer]==0.3.8
 numpy==1.24.4
 opencv-python==4.9.0.80

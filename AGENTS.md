@@ -29,15 +29,27 @@ venv\Scripts\activate  # Windows
 ## Build, Lint, and Test Commands
 
 ### Package Management
+This project uses **uv** for dependency management (faster alternative to pip).
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Install uv (if not already installed)
+pip install uv
 
-# Generate requirements (if needed)
-pip freeze > requirements.txt
+# Install all dependencies (including optional build dependencies)
+uv pip install --system .
+uv pip install --system .[windows,build,dev]
 
-# Install development dependencies
-pip install black ruff pytest pytest-qt
+# Install specific optional dependency groups
+uv pip install --system .[windows]    # Windows-specific dependencies (dxcam)
+uv pip install --system .[build]      # Build dependencies (nuitka[onefile], pyinstaller)
+uv pip install --system .[dev]        # Development dependencies (black, ruff, pytest)
+
+# Update dependencies
+uv pip compile pyproject.toml --upgrade
+uv pip sync
+
+# Check installed packages
+uv pip list
 ```
 
 ### Linting and Formatting
@@ -213,7 +225,15 @@ Core dependencies (from step2.md):
 Development dependencies:
 - black, ruff, mypy (formatting/linting)
 - pytest, pytest-qt (testing)
-- nuitka, pyinstaller (packaging)
+- nuitka[onefile], pyinstaller (packaging)
+
+**Dependency Management:**
+This project uses **uv** for dependency management. All dependencies are defined in `pyproject.toml` with optional dependency groups:
+- `[windows]`: Windows-specific dependencies (dxcam)
+- `[build]`: Build dependencies (nuitka[onefile], pyinstaller)
+- `[dev]`: Development dependencies (black, ruff, pytest)
+
+Always use `uv pip install` instead of `pip` for consistency.
 
 ## Testing Guidelines
 - Write unit tests for core functionality
@@ -231,8 +251,9 @@ Development dependencies:
 
 ## Common Tasks for Agents
 1. When adding new features, follow existing patterns in similar modules
-2. Update requirements.txt when adding dependencies
+2. Update `pyproject.toml` when adding dependencies (use uv, not pip)
 3. Write tests for new functionality
 4. Update configuration schema if adding new settings
 5. Follow UI design specifications from step3.md
 6. Ensure Windows compatibility for all changes
+7. Use `uv pip install` for all dependency management operations

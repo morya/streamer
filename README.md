@@ -40,8 +40,21 @@ source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+This project uses **uv** for dependency management (faster alternative to pip). All dependencies are defined in `pyproject.toml`.
+
 ```bash
-pip install -r requirements.txt
+# Install uv (if not already installed)
+pip install uv
+
+# Install all dependencies (core + Windows-specific)
+uv pip install --system .
+uv pip install --system .[windows]
+
+# For development and building:
+uv pip install --system .[dev,build]
+
+# Note: requirements.txt is provided for compatibility but may be outdated
+# Always use uv pip install with pyproject.toml for accurate dependency resolution
 ```
 
 ### 4. Run the Application

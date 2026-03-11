@@ -58,7 +58,9 @@ def build_with_nuitka() -> bool:
         "--copyright=Copyright © 2024 ScreenStreamer",
         "--nofollow-import-to=*.tests",
         "--nofollow-import-to=*.distutils",
+        "--nofollow-import-to=*test*",
         "--remove-output",
+        "--assume-yes-for-downloads",
         str(src_dir / "main.py")
     ]
     
