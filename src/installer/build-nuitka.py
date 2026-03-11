@@ -95,15 +95,15 @@ def build_with_nuitka() -> bool:
             
             return True
         else:
-            print(f"\n❌ Build failed: Executable not found at {exe_path}")
+            print(f"\n Build failed: Executable not found at {exe_path}")
             return False
             
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ Build failed with error code {e.returncode}")
+        print(f"\n Build failed with error code {e.returncode}")
         print(f"Error output:\n{e.stderr}")
         return False
     except Exception as e:
-        print(f"\n❌ Build failed with exception: {e}")
+        print(f"\n Build failed with exception: {e}")
         return False
 
 
@@ -199,7 +199,7 @@ def main() -> None:
         import nuitka
         # print(f"Nuitka version: {nuitka.__version__}")
     except ImportError:
-        print("❌ Nuitka not installed. Install with: pip install nuitka")
+        print(" Nuitka not installed. Install with: pip install nuitka")
         sys.exit(1)
         
     # Build with Nuitka
