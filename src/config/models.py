@@ -10,7 +10,7 @@ class CaptureConfig(BaseModel):
     """Capture configuration."""
     region: Literal["1", "2", "4"] = "1"
     fps: int = Field(default=60, ge=1, le=240)
-    
+
     model_config = ConfigDict(extra="forbid")
 
 
@@ -18,11 +18,11 @@ class EncodingConfig(BaseModel):
     """Encoding configuration."""
     bitrate: str = Field(default="2Mbps", pattern=r"^\d+Mbps$|^Custom$")
     protocol: Literal["rtmp", "srt"] = "rtmp"
-    preset: Literal["ultrafast", "superfast", "veryfast", "faster", 
+    preset: Literal["ultrafast", "superfast", "veryfast", "faster",
                     "fast", "medium", "slow", "slower", "veryslow"] = "fast"
-    
+
     model_config = ConfigDict(extra="forbid")
-    
+
     @field_validator("bitrate")
     @classmethod
     def validate_bitrate(cls, v: str) -> str:
@@ -44,7 +44,7 @@ class StreamingConfig(BaseModel):
     """Streaming configuration."""
     last_url: str = ""
     auto_start: bool = False
-    
+
     model_config = ConfigDict(extra="forbid")
 
 
@@ -53,9 +53,9 @@ class UIConfig(BaseModel):
     window_position: List[int] = Field(default_factory=lambda: [100, 100])
     always_on_top: bool = True
     theme: Literal["dark", "light", "system"] = "dark"
-    
+
     model_config = ConfigDict(extra="forbid")
-    
+
     @field_validator("window_position")
     @classmethod
     def validate_window_position(cls, v: List[int]) -> List[int]:
@@ -73,9 +73,9 @@ class AppConfig(BaseModel):
     encoding: EncodingConfig = Field(default_factory=EncodingConfig)
     streaming: StreamingConfig = Field(default_factory=StreamingConfig)
     ui: UIConfig = Field(default_factory=UIConfig)
-    
+
     model_config = ConfigDict(extra="forbid")
-    
+
     @classmethod
     def default(cls) -> "AppConfig":
         """Create default configuration."""

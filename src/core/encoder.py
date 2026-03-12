@@ -18,7 +18,7 @@ except ImportError:
 
 class VideoEncoder:
     """H.264 hardware encoder using NVENC."""
-    
+
     BITRATE_MAP = {
         "500k": "500k",
         "1Mbps": "1000k",
@@ -26,11 +26,11 @@ class VideoEncoder:
         "5Mbps": "5000k",
         "8Mbps": "8000k"
     }
-    
-    def __init__(self, output_path: str, bitrate: str = "2Mbps", 
+
+    def __init__(self, output_path: str, bitrate: str = "2Mbps",
                  fps: int = 60, protocol: str = "rtmp") -> None:
         """Initialize video encoder.
-        
+
         Args:
             output_path: Output file path or stream URL
             bitrate: Target bitrate (e.g., "2Mbps")
@@ -45,20 +45,20 @@ class VideoEncoder:
         self._is_encoding = False
         self._frame_queue = queue.Queue(maxsize=30)
         self._encoding_thread: Optional[threading.Thread] = None
-        
+
     def start(self, width: int, height: int) -> bool:
         """Start the encoder.
-        
+
         Args:
             width: Frame width
             height: Frame height
-            
+
         Returns:
             True if encoder started successfully, False otherwise
         """
         if self._is_encoding:
             return False
-            
+
         try:
             # Configure output parameters for FFmpeg
             output_params = {
@@ -75,7 +75,7 @@ class VideoEncoder:
                 "-profile:v": "high",     # H.264 profile
                 "-level:v": "4.2",        # H.264 level
             }
-            
+
             # Protocol-specific parameters
             if self.protocol == "rtmp":
                 output_params.update({
@@ -88,14 +88,14 @@ class VideoEncoder:
                     "-muxdelay": "0.1",   # Reduced muxing delay
                     "-fflags": "+genpts"  # Generate presentation timestamps
                 })
-                
+
             # Initialize WriteGear with output parameters
             self.encoder = WriteGear(
                 output=self.output_path,
                 logging=False,
                 **output_params
             )
-            
+
             # Start encoding thread
             self._is_encoding = True
             self._encoding_thread = threading.Thread(
@@ -103,45 +103,45 @@ class VideoEncoder:
                 daemon=True
             )
             self._encoding_thread.start()
-            
+
             return True
-            
+
         except Exception as e:
             print(f"Failed to start encoder: {e}")
             return False
-            
+
     def stop(self) -> None:
         """Stop the encoder."""
         self._is_encoding = False
-        
+
         # Wait for encoding thread to finish
         if self._encoding_thread and self._encoding_thread.is_alive():
             self._encoding_thread.join(timeout=2.0)
-            
+
         # Close encoder
         if self.encoder:
             self.encoder.close()
             self.encoder = None
-            
+
         # Clear frame queue
         while not self._frame_queue.empty():
             try:
                 self._frame_queue.get_nowait()
             except queue.Empty:
                 break
-                
+
     def encode_frame(self, frame: np.ndarray) -> bool:
         """Queue a frame for encoding.
-        
+
         Args:
             frame: Frame to encode as numpy array
-            
+
         Returns:
             True if frame was queued successfully, False otherwise
         """
         if not self._is_encoding or not self.encoder:
             return False
-            
+
         try:
             # Non-blocking put with timeout
             self._frame_queue.put(frame, block=False, timeout=0.1)
@@ -151,18 +151,18 @@ class VideoEncoder:
             return False
         except Exception:
             return False
-            
+
     def _encoding_loop(self) -> None:
         """Main encoding loop running in separate thread."""
         while self._is_encoding:
             try:
                 # Get frame from queue with timeout
                 frame = self._frame_queue.get(timeout=0.1)
-                
+
                 # Encode frame
                 if self.encoder and frame is not None:
                     self.encoder.write(frame)
-                    
+
             except queue.Empty:
                 # No frames to encode, continue
                 continue
@@ -170,11 +170,11 @@ class VideoEncoder:
                 print(f"Encoding error: {e}")
                 # Small delay to prevent tight loop on error
                 time.sleep(0.01)
-                
+
     def is_encoding(self) -> bool:
         """Check if encoder is currently active."""
         return self._is_encoding
-        
+
     def get_bitrate_bps(self) -> int:
         """Get bitrate in bits per second."""
         bitrate_str = self.BITRATE_MAP.get(self.bitrate, "2000k")

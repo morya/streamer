@@ -16,7 +16,7 @@ from .overlay_window import OverlayWindow
 
 class MainWindow(QMainWindow):
     """Main application window with streaming controls."""
-    
+
     # Signals
     region_changed = Signal(str)  # Region size changed
     bitrate_changed = Signal(str)  # Bitrate changed
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         '2',   # 2/4
         '4',   # 4/4
     ]
-    
+
     def __init__(self) -> None:
         super().__init__()
         self._current_region_idx = 0
@@ -42,42 +42,42 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self._setup_overlay()
         self._position_window()
-        
+
     def _setup_ui(self) -> None:
         """Initialize the UI components."""
         self.setWindowTitle("Screen Streamer")
         self.setFixedSize(400, 150)
-        
+
         # Set window flags for always on top
         self.setWindowFlags(
-            self.windowFlags() | 
-            Qt.WindowStaysOnTopHint | 
-            Qt.FramelessWindowHint | 
+            self.windowFlags() |
+            Qt.WindowStaysOnTopHint |
+            Qt.FramelessWindowHint |
             Qt.Tool
         )
-        
+
         # Set window attributes for acrylic/glass effect
         self.setAttribute(Qt.WA_TranslucentBackground)
-        
+
         # Create central widget with custom styling
         central_widget = QWidget()
         central_widget.setObjectName("MainWindow")
         self.setCentralWidget(central_widget)
-        
+
         # Apply stylesheet for acrylic/glass effect and dark theme
         self._apply_stylesheet()
-        
+
         # Main layout
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(15, 10, 15, 10)
         main_layout.setSpacing(8)
-        
+
         # Top row: Region controls
         top_row = QHBoxLayout()
-        
+
         # Region indicator
         self.region_label = QLabel("Full Screen (1920x1080)")
-        
+
         if sys.platform == "darwin":
             fontname = ".AppleSystemUIFont"
         elif sys.platform == "win32":
@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         self.region_label.setFont(QFont(fontname, 10, QFont.Weight.Normal))
         self.region_label.setStyleSheet("color: #FFFFFF;")
         top_row.addWidget(self.region_label)
-        
+
         # Region minus button
         self.region_minus_btn = QPushButton("-")
         self.region_minus_btn.setFixedSize(32, 32)
@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
             }
         """)
         top_row.addWidget(self.region_minus_btn)
-        
+
         # Region plus button
         self.region_plus_btn = QPushButton("+")
         self.region_plus_btn.setFixedSize(32, 32)
@@ -131,14 +131,14 @@ class MainWindow(QMainWindow):
             }
         """)
         top_row.addWidget(self.region_plus_btn)
-        
+
         # Separator
         separator = QFrame()
         separator.setFrameShape(QFrame.VLine)
         separator.setStyleSheet("background-color: #444444;")
         separator.setFixedWidth(1)
         top_row.addWidget(separator)
-        
+
         # Bitrate selector
         self.bitrate_combo = QComboBox()
         self.bitrate_combo.addItems(["1Mbps", "2Mbps", "5Mbps", "8Mbps", "Custom"])
@@ -174,12 +174,12 @@ class MainWindow(QMainWindow):
             }
         """)
         top_row.addWidget(self.bitrate_combo)
-        
+
         main_layout.addLayout(top_row)
-        
+
         # Middle row: Protocol and URL
         middle_row = QHBoxLayout()
-        
+
         # Protocol selector (SRT/RTMP toggle)
         self.protocol_combo = QComboBox()
         self.protocol_combo.addItems(["SRT", "RTMP"])
@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
             }
         """)
         middle_row.addWidget(self.protocol_combo)
-        
+
         # URL input
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("rtmp:// 或 srt://...")
@@ -238,12 +238,12 @@ class MainWindow(QMainWindow):
             }
         """)
         middle_row.addWidget(self.url_input)
-        
+
         main_layout.addLayout(middle_row)
-        
+
         # Bottom row: Start/Stop button
         bottom_row = QHBoxLayout()
-        
+
         self.stream_btn = QPushButton("开始推流")
         self.stream_btn.setFixedHeight(36)
         self.stream_btn.setStyleSheet("""
@@ -285,14 +285,14 @@ class MainWindow(QMainWindow):
         bottom_row.addWidget(self.stream_btn)
         bottom_row.addWidget(self.exit_btn)
         # self.exit_btn.clicked.connect(self.close)
-        
+
         main_layout.addLayout(bottom_row)
-        
+
         # Status label
         self.status_label = QLabel("Ready")
         self.status_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.status_label)
-        
+
     def _connect_signals(self) -> None:
         """Connect UI signals to slots."""
         self.region_minus_btn.clicked.connect(self._on_region_minus)
@@ -300,56 +300,56 @@ class MainWindow(QMainWindow):
         self.bitrate_combo.currentTextChanged.connect(self._on_bitrate_changed)
         self.protocol_combo.currentTextChanged.connect(self._on_protocol_changed)
         self.stream_btn.clicked.connect(self._on_stream_toggle)
-        
+
         # Connect configuration change signals
         self.region_minus_btn.clicked.connect(self._on_config_changed)
         self.region_plus_btn.clicked.connect(self._on_config_changed)
         self.bitrate_combo.currentTextChanged.connect(self._on_config_changed)
         self.protocol_combo.currentTextChanged.connect(self._on_config_changed)
         self.url_input.textChanged.connect(self._on_config_changed)
-        
+
     def _on_region_minus(self) -> None:
         """Handle region minus button click."""
         self._current_region_idx -= 1
         if self._current_region_idx < 0:
             self._current_region_idx = 0
         self._current_region = self.regions[self._current_region_idx]
-            
+
         self._update_region_display()
         self._update_overlay_region()
         self.region_changed.emit(self._current_region)
-        
+
     def _on_region_plus(self) -> None:
         """Handle region plus button click."""
         self._current_region_idx += 1
         if self._current_region_idx >= len(self.regions):
             self._current_region_idx = len(self.regions) - 1
         self._current_region = self.regions[self._current_region_idx]
-            
+
         self._update_region_display()
         self._update_overlay_region()
         self.region_changed.emit(self._current_region)
-        
+
     def _on_bitrate_changed(self, bitrate: str) -> None:
         """Handle bitrate selection change."""
         self.bitrate_changed.emit(bitrate)
-        
+
     def _on_protocol_changed(self, protocol: str) -> None:
         """Handle protocol selection change."""
         self.protocol_changed.emit(protocol)
-        
+
     def _on_config_changed(self) -> None:
         """Handle configuration changes and save to config manager."""
         if hasattr(self, '_config_manager') and self._config_manager:
             self.save_configuration()
-        
+
     def _on_stream_toggle(self) -> None:
         """Handle start/stop streaming button click."""
         url = self.url_input.text().strip()
         if not url:
             self.update_status("Error: Please enter a stream URL", is_error=True)
             return
-            
+
         if self.stream_btn.text() == "Start Streaming":
             self.stream_btn.setText("Stop Streaming")
             self.stream_btn.setStyleSheet("""
@@ -390,11 +390,11 @@ class MainWindow(QMainWindow):
                 }
             """)
             self.streaming_toggled.emit(False, url)
-            
+
     def update_region_label(self, region_info: str) -> None:
         """Update the region display label."""
         self.region_label.setText(region_info)
-        
+
     def update_status(self, status: str, is_error: bool = False) -> None:
         """Update the status label."""
         self.status_label.setText(status)
@@ -402,7 +402,7 @@ class MainWindow(QMainWindow):
             self.status_label.setStyleSheet("color: #E81123; font-weight: bold;")
         else:
             self.status_label.setStyleSheet("color: #CCCCCC;")
-            
+
     def update_streaming_status(self, is_streaming: bool, fps: int = 0, bitrate: str = "") -> None:
         """Update streaming status indicator."""
         if is_streaming:
@@ -412,7 +412,7 @@ class MainWindow(QMainWindow):
         else:
             self.status_label.setText("Ready")
             self.status_label.setStyleSheet("color: #CCCCCC;")
-            
+
     def _apply_stylesheet(self) -> None:
         """Apply the main stylesheet for acrylic/glass effect."""
         stylesheet = """
@@ -435,31 +435,31 @@ class MainWindow(QMainWindow):
             font-size: 11px;
         }
         """
-        
+
         self.setStyleSheet(stylesheet)
-        
+
     def paintEvent(self, event):
         """Override paint event for custom background with acrylic effect."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
+
         # Draw rounded rectangle with acrylic effect
         brush = QBrush(QColor(30, 30, 30, 204))  # #1E1E1E with 80% opacity
         painter.setBrush(brush)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(self.rect(), 8, 8)
-        
+
         # Draw border
         pen = QPen(QColor(68, 68, 68, 100))
         pen.setWidth(1)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRoundedRect(self.rect().adjusted(0, 0, -1, -1), 8, 8)
-        
+
     def _setup_overlay(self) -> None:
         """Setup the overlay window for region selection."""
         self._overlay = OverlayWindow()
-        
+
     def _update_overlay_region(self) -> None:
         """Update the overlay region based on current settings."""
         if self._overlay:
@@ -473,21 +473,21 @@ class MainWindow(QMainWindow):
         """Update the region display label."""
         label = f'{self._current_region}/4'
         self.region_label.setText(label)
-        
+
     def show_overlay(self) -> None:
         """Show the region selection overlay."""
         if self._overlay:
             self._update_overlay_region()
             self._overlay.show_overlay()
-            
+
     def hide_overlay(self) -> None:
         """Hide the region selection overlay."""
         if self._overlay:
             self._overlay.hide_overlay()
-            
+
     def set_screen_resolution(self, width: int, height: int) -> None:
         """Set screen resolution for region calculations.
-        
+
         Args:
             width: Screen width
             height: Screen height
@@ -496,10 +496,10 @@ class MainWindow(QMainWindow):
         self._screen_height = height
         self._update_region_display()
         self._update_overlay_region()
-        
+
     def get_capture_region(self) -> tuple:
         """Get the current capture region as tuple.
-        
+
         Returns:
             Tuple of (left, top, width, height)
         """
@@ -528,41 +528,41 @@ class MainWindow(QMainWindow):
                 x = (self._screen_width - width) // 2
                 y = (self._screen_height - height) // 2
                 return (x, y, width, height)
-                
+
     def _position_window(self) -> None:
         """Position window at top center of screen."""
         screen_geometry = self.screen().geometry()
         window_width = self.width()
         window_height = self.height()
-        
+
         x = (screen_geometry.width() - window_width) // 2
         y = 10  # 10 pixels from top
-        
+
         self.move(x, y)
-        
+
     def mousePressEvent(self, event):
         """Handle mouse press event for window dragging."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = True
             self._drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
-            
+
     def mouseMoveEvent(self, event):
         """Handle mouse move event for window dragging."""
         if self._dragging and self._drag_position:
             self.move(event.globalPosition().toPoint() - self._drag_position)
             event.accept()
-            
+
     def mouseReleaseEvent(self, event):
         """Handle mouse release event for window dragging."""
         if event.button() == Qt.MouseButton.LeftButton:
             self._dragging = False
             self._drag_position = None
             event.accept()
-            
+
     def load_configuration(self, config_manager) -> None:
         """Load configuration into UI controls.
-        
+
         Args:
             config_manager: ConfigManager instance
         """
@@ -571,14 +571,14 @@ class MainWindow(QMainWindow):
         if region in ["1/4", "1/2", "full"]:
             self._current_region = region
             self._update_region_display()
-            
+
         # Load bitrate setting
         bitrate = config_manager.get_bitrate()
         if bitrate in ["1Mbps", "2Mbps", "5Mbps", "8Mbps", "Custom"]:
             index = self.bitrate_combo.findText(bitrate)
             if index >= 0:
                 self.bitrate_combo.setCurrentIndex(index)
-                
+
         # Load protocol setting
         protocol = config_manager.get_protocol()
         if protocol in ["srt", "rtmp"]:
@@ -586,50 +586,50 @@ class MainWindow(QMainWindow):
             index = self.protocol_combo.findText(protocol_text)
             if index >= 0:
                 self.protocol_combo.setCurrentIndex(index)
-                
+
         # Load stream URL
         stream_url = config_manager.get_stream_url()
         if stream_url:
             self.url_input.setText(stream_url)
-            
+
         # Load window position
         window_pos = config_manager.get_window_position()
         if len(window_pos) == 2:
             self.move(window_pos[0], window_pos[1])
-            
+
         # Store config manager reference
         self._config_manager = config_manager
-        
+
     def save_configuration(self, config_manager=None) -> None:
         """Save UI configuration.
-        
+
         Args:
             config_manager: Optional ConfigManager instance (uses stored if None)
         """
         if config_manager is None:
             config_manager = getattr(self, '_config_manager', None)
-            
+
         if not config_manager:
             return
-            
+
         # Save region setting
         config_manager.set_capture_region(self._current_region)
-        
+
         # Save bitrate setting
         bitrate = self.bitrate_combo.currentText()
         config_manager.set_bitrate(bitrate)
-        
+
         # Save protocol setting
         protocol = self.protocol_combo.currentText().lower()
         config_manager.set_protocol(protocol)
-        
+
         # Save stream URL
         stream_url = self.url_input.text().strip()
         config_manager.set_stream_url(stream_url)
-        
+
         # Save window position
         window_pos = self.pos()
         config_manager.set_window_position(window_pos.x(), window_pos.y())
-        
+
         # Save configuration
         config_manager.save()

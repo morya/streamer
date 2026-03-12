@@ -14,18 +14,18 @@ from pathlib import Path
 
 def build_with_nuitka() -> bool:
     """Build the application using Nuitka.
-    
+
     Returns:
         True if build successful, False otherwise
     """
     print("Building Screen Streaming Tool with Nuitka...")
-    
+
     # Configuration
     app_name = "ScreenStreamer"
     src_dir = Path(__file__).parent.parent
     dist_dir = Path("dist")
     build_dir = Path("build")
-    
+
     # Clean previous builds
     if dist_dir.exists():
         print(f"Cleaning previous distribution: {dist_dir}")
@@ -33,10 +33,10 @@ def build_with_nuitka() -> bool:
     if build_dir.exists():
         print(f"Cleaning previous build: {build_dir}")
         shutil.rmtree(build_dir)
-        
+
     # Create output directory
     dist_dir.mkdir(exist_ok=True)
-    
+
     # Nuitka command
     nuitka_cmd = [
         sys.executable, "-m", "nuitka",
@@ -63,43 +63,43 @@ def build_with_nuitka() -> bool:
         "--assume-yes-for-downloads",
         str(src_dir / "main.py")
     ]
-    
+
     # Remove empty strings from command
     nuitka_cmd = [arg for arg in nuitka_cmd if arg]
-    
+
     print(f"Running command: {' '.join(nuitka_cmd)}")
-    
+
     try:
         # Run Nuitka
         result = subprocess.run(nuitka_cmd, check=True, capture_output=True, text=True)
         print("Build output:")
         print(result.stdout)
-        
+
         if result.stderr:
             print("Build warnings/errors:")
             print(result.stderr)
-            
+
         # Check if executable was created
         exe_name = "main.exe" if os.name == "nt" else "main"
         exe_path = dist_dir / exe_name
-        
+
         if exe_path.exists():
             # Rename to app name
             final_exe = dist_dir / f"{app_name}.exe" if os.name == "nt" else dist_dir / app_name
             shutil.move(exe_path, final_exe)
-            
+
             print(f"\n✅ Build successful!")
             print(f"Executable: {final_exe}")
             print(f"Size: {final_exe.stat().st_size / (1024*1024):.2f} MB")
-            
+
             # Copy FFmpeg binaries if available
             copy_ffmpeg_binaries(dist_dir)
-            
+
             return True
         else:
             print(f"\n Build failed: Executable not found at {exe_path}")
             return False
-            
+
     except subprocess.CalledProcessError as e:
         print(f"\n Build failed with error code {e.returncode}")
         print(f"Error output:\n{e.stderr}")
@@ -111,26 +111,26 @@ def build_with_nuitka() -> bool:
 
 def copy_ffmpeg_binaries(dist_dir: Path) -> None:
     """Copy FFmpeg binaries to distribution directory.
-    
+
     Args:
         dist_dir: Distribution directory path
     """
     ffmpeg_src = Path("ffmpeg")
     ffmpeg_dst = dist_dir / "ffmpeg"
-    
+
     if ffmpeg_src.exists():
         print(f"Copying FFmpeg binaries from {ffmpeg_src}...")
-        
+
         # Create ffmpeg directory in dist
         ffmpeg_dst.mkdir(exist_ok=True)
-        
+
         # Copy FFmpeg executables
         for exe in ["ffmpeg.exe", "ffplay.exe", "ffprobe.exe"]:
             src_file = ffmpeg_src / exe
             if src_file.exists():
                 shutil.copy2(src_file, ffmpeg_dst / exe)
                 print(f"  - Copied {exe}")
-                
+
         print(f"FFmpeg binaries copied to {ffmpeg_dst}")
     else:
         print("Note: FFmpeg directory not found. FFmpeg must be in system PATH.")
@@ -138,26 +138,26 @@ def copy_ffmpeg_binaries(dist_dir: Path) -> None:
 
 def create_portable_package(dist_dir: Path) -> None:
     """Create a portable package with all dependencies.
-    
+
     Args:
         dist_dir: Distribution directory path
     """
     print("\nCreating portable package...")
-    
+
     portable_dir = dist_dir / "ScreenStreamer-Portable"
     portable_dir.mkdir(exist_ok=True)
-    
+
     # Copy executable
     exe_name = "ScreenStreamer.exe" if os.name == "nt" else "ScreenStreamer"
     exe_src = dist_dir / exe_name
     if exe_src.exists():
         shutil.copy2(exe_src, portable_dir / exe_name)
-        
+
     # Copy FFmpeg directory if it exists
     ffmpeg_src = dist_dir / "ffmpeg"
     if ffmpeg_src.exists():
         shutil.copytree(ffmpeg_src, portable_dir / "ffmpeg", dirs_exist_ok=True)
-        
+
     # Create README
     readme_content = """# Screen Streamer - Portable Version
 
@@ -183,10 +183,10 @@ If you have FFmpeg installed system-wide, you can delete the `ffmpeg` folder.
 ## Support
 For issues and feature requests, visit the project repository.
 """
-    
+
     with open(portable_dir / "README.txt", "w", encoding="utf-8") as f:
         f.write(readme_content)
-        
+
     print(f"Portable package created: {portable_dir}")
 
 
@@ -195,7 +195,7 @@ def main() -> None:
     print("=" * 60)
     print("Screen Streaming Tool - Build Script")
     print("=" * 60)
-    
+
     # Check if Nuitka is installed
     try:
         import nuitka
@@ -203,12 +203,12 @@ def main() -> None:
     except ImportError:
         print(" Nuitka not installed. Install with: pip install nuitka")
         sys.exit(1)
-        
+
     # Build with Nuitka
     if build_with_nuitka():
         # Create portable package
         create_portable_package(Path("dist"))
-        
+
         print("\n" + "=" * 60)
         print("Build completed successfully!")
         print("=" * 60)

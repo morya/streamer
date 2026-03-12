@@ -12,34 +12,34 @@ from pathlib import Path
 
 def run_unit_tests() -> bool:
     """Run unit tests.
-    
+
     Returns:
         True if all tests pass, False otherwise
     """
     print("=" * 60)
     print("Running unit tests...")
     print("=" * 60)
-    
+
     test_dir = Path("src/tests")
     if not test_dir.exists():
         print(f"Test directory not found: {test_dir}")
         return False
-        
+
     # Find all test files
     test_files = list(test_dir.glob("test_*.py"))
     if not test_files:
         print("No test files found")
         return False
-        
+
     print(f"Found {len(test_files)} test files:")
     for test_file in test_files:
         print(f"  - {test_file.name}")
-        
+
     # Run tests
     all_passed = True
     for test_file in test_files:
         print(f"\nRunning {test_file.name}...")
-        
+
         try:
             result = subprocess.run(
                 [sys.executable, str(test_file)],
@@ -47,37 +47,37 @@ def run_unit_tests() -> bool:
                 text=True,
                 timeout=30
             )
-            
+
             if result.returncode == 0:
                 print(f"✅ {test_file.name} passed")
             else:
                 print(f"❌ {test_file.name} failed")
                 print(f"Error output:\n{result.stderr}")
                 all_passed = False
-                
+
         except subprocess.TimeoutExpired:
             print(f"⏰ {test_file.name} timed out")
             all_passed = False
         except Exception as e:
             print(f"⚠️  {test_file.name} error: {e}")
             all_passed = False
-            
+
     return all_passed
 
 
 def run_integration_tests() -> bool:
     """Run integration tests.
-    
+
     Returns:
         True if integration tests pass, False otherwise
     """
     print("\n" + "=" * 60)
     print("Running integration tests...")
     print("=" * 60)
-    
+
     # Check if main application can be imported
     print("Testing module imports...")
-    
+
     modules_to_test = [
         "src.main",
         "src.ui.main_window",
@@ -88,7 +88,7 @@ def run_integration_tests() -> bool:
         "src.config.schema",
         "src.controller",
     ]
-    
+
     all_imported = True
     for module_path in modules_to_test:
         try:
@@ -100,20 +100,20 @@ def run_integration_tests() -> bool:
         except Exception as e:
             print(f"⚠️  Error importing {module_path}: {e}")
             all_imported = False
-            
+
     return all_imported
 
 
 def check_dependencies() -> bool:
     """Check if all dependencies are available.
-    
+
     Returns:
         True if all dependencies are available, False otherwise
     """
     print("\n" + "=" * 60)
     print("Checking dependencies...")
     print("=" * 60)
-    
+
     dependencies = [
         "PySide6",
         "dxcam",
@@ -122,7 +122,7 @@ def check_dependencies() -> bool:
         "cv2",
         "appdirs",
     ]
-    
+
     all_available = True
     for dep in dependencies:
         try:
@@ -134,20 +134,20 @@ def check_dependencies() -> bool:
         except ImportError:
             print(f"❌ {dep} not installed")
             all_available = False
-            
+
     return all_available
 
 
 def check_project_structure() -> bool:
     """Check project structure.
-    
+
     Returns:
         True if project structure is correct, False otherwise
     """
     print("\n" + "=" * 60)
     print("Checking project structure...")
     print("=" * 60)
-    
+
     required_dirs = [
         "src",
         "src/ui",
@@ -157,7 +157,7 @@ def check_project_structure() -> bool:
         "src/installer",
         "docs",
     ]
-    
+
     required_files = [
         "src/main.py",
         "src/ui/main_window.py",
@@ -172,9 +172,9 @@ def check_project_structure() -> bool:
         "README.md",
         "AGENTS.md",
     ]
-    
+
     all_present = True
-    
+
     # Check directories
     for dir_path in required_dirs:
         if Path(dir_path).exists():
@@ -182,7 +182,7 @@ def check_project_structure() -> bool:
         else:
             print(f"❌ Missing directory: {dir_path}")
             all_present = False
-            
+
     # Check files
     for file_path in required_files:
         if Path(file_path).exists():
@@ -190,7 +190,7 @@ def check_project_structure() -> bool:
         else:
             print(f"❌ Missing file: {file_path}")
             all_present = False
-            
+
     return all_present
 
 
@@ -199,29 +199,29 @@ def generate_test_report() -> None:
     print("\n" + "=" * 60)
     print("Generating test report...")
     print("=" * 60)
-    
+
     report = {
         "unit_tests": run_unit_tests(),
         "integration_tests": run_integration_tests(),
         "dependencies": check_dependencies(),
         "project_structure": check_project_structure(),
     }
-    
+
     print("\n" + "=" * 60)
     print("TEST REPORT SUMMARY")
     print("=" * 60)
-    
+
     for test_name, result in report.items():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"{test_name.replace('_', ' ').title():20} {status}")
-        
+
     all_passed = all(report.values())
-    
+
     if all_passed:
         print("\n🎉 All tests passed!")
     else:
         print("\n⚠️  Some tests failed. Please check the output above.")
-        
+
     return all_passed
 
 
@@ -235,26 +235,26 @@ def main() -> None:
     parser.add_argument("--all", action="store_true", help="Run all tests (default)")
     
     args = parser.parse_args()
-    
+
     # Default to running all tests if no specific option is provided
     if not any([args.unit, args.integration, args.deps, args.structure, args.all]):
         args.all = True
-        
+
     print("Screen Streaming Tool - Test Runner")
     print("=" * 60)
-    
+
     if args.unit or args.all:
         run_unit_tests()
-        
+
     if args.integration or args.all:
         run_integration_tests()
-        
+
     if args.deps or args.all:
         check_dependencies()
-        
+
     if args.structure or args.all:
         check_project_structure()
-        
+
     if args.all:
         generate_test_report()
 
