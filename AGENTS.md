@@ -192,7 +192,7 @@ class MainWindow(QMainWindow):
 ### Configuration Management
 - Store user config in `appdirs.user_data_dir("screen-streamer")`
 - Use JSON for configuration files
-- Validate config on load with schema validation
+- Validate config on load with Pydantic models
 
 ## Project Structure
 ```
@@ -207,8 +207,7 @@ src/
 │   └── streamer.py      # Streaming module
 ├── config/              # Configuration management
 │   ├── manager.py       # Config loading/saving
-│   ├── models.py        # Config models (Pydantic)
-│   └── schema.py        # Config validation (legacy)
+│   └── models.py        # Config models (Pydantic)
 ├── resources/           # Icons, fonts, etc.
 └── utils/               # Utility functions
 ```
