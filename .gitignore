@@ -54,3 +54,4 @@ installer/output/
 *.log
 *.tmp
 config.json.github_token
+t/
