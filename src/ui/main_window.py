@@ -49,15 +49,11 @@ class MainWindow(QMainWindow):
         self.setFixedSize(400, 150)
 
         # Set window flags for always on top
-        self.setWindowFlags(
-            self.windowFlags() |
-            Qt.WindowStaysOnTopHint |
-            Qt.FramelessWindowHint |
-            Qt.Tool
-        )
+        flags = Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint # | Qt.Tool
+        self.setWindowFlags(self.windowFlags() | flags)
 
         # Set window attributes for acrylic/glass effect
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        # self.setAttribute(Qt.WA_TranslucentBackground)
 
         # Create central widget with custom styling
         central_widget = QWidget()
@@ -70,7 +66,7 @@ class MainWindow(QMainWindow):
         # Main layout
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(15, 10, 15, 10)
-        main_layout.setSpacing(8)
+        main_layout.setSpacing(4)
 
         # Top row: Region controls
         top_row = QHBoxLayout()

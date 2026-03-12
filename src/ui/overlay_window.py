@@ -143,7 +143,7 @@ class OverlayWindow(QWidget):
 
     def show_overlay(self) -> None:
         """Show the overlay window."""
-        self.showFullScreen()
+        self.show()
 
     def hide_overlay(self) -> None:
         """Hide the overlay window."""

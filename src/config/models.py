@@ -62,8 +62,7 @@ class UIConfig(BaseModel):
         """Validate window position."""
         if len(v) != 2:
             raise ValueError("Window position must have exactly 2 coordinates")
-        if v[0] < 0 or v[1] < 0:
-            raise ValueError("Window position coordinates must be non-negative")
+    
         return v
 
 

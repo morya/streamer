@@ -45,7 +45,7 @@ def run_unit_tests() -> bool:
                 [sys.executable, str(test_file)],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -85,7 +85,6 @@ def run_integration_tests() -> bool:
         "src.core.encoder",
         "src.core.streamer",
         "src.config.manager",
-        "src.config.schema",
         "src.controller",
     ]
 
@@ -229,11 +228,15 @@ def main() -> None:
     """Main test runner function."""
     parser = argparse.ArgumentParser(description="Run tests for Screen Streaming Tool")
     parser.add_argument("--unit", action="store_true", help="Run only unit tests")
-    parser.add_argument("--integration", action="store_true", help="Run only integration tests")
+    parser.add_argument(
+        "--integration", action="store_true", help="Run only integration tests"
+    )
     parser.add_argument("--deps", action="store_true", help="Check dependencies only")
-    parser.add_argument("--structure", action="store_true", help="Check project structure only")
+    parser.add_argument(
+        "--structure", action="store_true", help="Check project structure only"
+    )
     parser.add_argument("--all", action="store_true", help="Run all tests (default)")
-    
+
     args = parser.parse_args()
 
     # Default to running all tests if no specific option is provided
